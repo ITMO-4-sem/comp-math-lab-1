@@ -254,6 +254,12 @@ export class Computer {
     }
 
 
+    public getXVectors(): number[][] {
+        console.log("xVectors =", this.xValues);
+        return this.xValues;
+    }
+
+
     /**
      * Getter для матрицы элементов.
      * @return матрицу элементов.

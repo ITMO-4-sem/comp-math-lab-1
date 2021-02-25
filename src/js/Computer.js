@@ -185,6 +185,10 @@ class Computer {
         this.matrix = matrix;
         this.matrixSize = matrix.length;
     }
+    getXVectors() {
+        console.log("xVectors =", this.xValues);
+        return this.xValues;
+    }
     /**
      * Getter для матрицы элементов.
      * @return матрицу элементов.

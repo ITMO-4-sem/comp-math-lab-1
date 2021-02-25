@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="./index.css">
+</head>
+<body>
+    <h2>Введите коэффициенты матрицы</h2>
+    <p>Элементы - числа целые или вещественные
+        <br>Матрица должны быть квадратной, то есть количество строк должно быть на 1 меньше
+        <br>количества столбцов (последний правый столбец для свободных членов)</p>
+    <form id="form" action="">
+        <textarea
+            id="textarea"
+            name="textarea"
+            rows="8"
+            cols="20"
+            placeholder="2  2  10 14                           10 1  1  12               2  10 1  13"
+        ></textarea>
+        <br>
+        <br>
+        <label for="filePicker">Выберете файл</label>
+        <input type="file" id="filePicker" name="file" accept=".txt">
+        <br>
+        <br>
+        <input id="textAreaRadio" name="radio" type="radio" value="textArea" checked/>
+        <label for="textAreaRadio">Матрица из поля ввода</label>
+        <br>
+        <input id="fileRadio" name="radio" type="radio" value="file"/>
+        <label for="fileRadio">Матрица из файла</label>
+        <br>
+        <label for="epsilon">Эпсилон: </label>
+        <input id="epsilon" type="text">
+        <br>
+
+        <br>
+
+        <button type="button" id="submit">Решить СЛАУ</button>
+    </form>
+    <p id="message"></p>
+
+<!--    <table>-->
+<!--        <thead>-->
+<!--            <tr>-->
+<!--                <td></td>-->
+<!--                <td></td>-->
+<!--                <td></td>-->
+<!--            </tr>-->
+<!--        </thead>-->
+<!--        <tbody></tbody>-->
+<!--    </table>-->
+
+
+    <h2>
+        Вывод программы:
+    </h2>
+    <textarea id="result" cols="80" rows="20" ></textarea>
+    <br>
+    <main id="container"></main>
+    <script src="build.js"></script>
+<!--    <script src="js/main.js"></script>-->
+</body>
+</html>

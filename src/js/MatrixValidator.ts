@@ -10,7 +10,7 @@ export class MatrixValidator {
     public static isMatrixValid(matrix: number[][]): Result {
 
         if ( this.isMatrixEmpty(matrix) ) {
-            return new Result(false, "Матрица не может быть пустой.");
+            return new Result(false, "Матрица не может быть неполной / пустой.");
         }
 
         if ( ! this.isMatrixSquire(matrix) )

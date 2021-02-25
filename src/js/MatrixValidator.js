@@ -8,7 +8,7 @@ const Result_1 = require("./Result");
 class MatrixValidator {
     static isMatrixValid(matrix) {
         if (this.isMatrixEmpty(matrix)) {
-            return new Result_1.Result(false, "Матрица не может быть пустой.");
+            return new Result_1.Result(false, "Матрица не может быть неполной / пустой.");
         }
         if (!this.isMatrixSquire(matrix))
             return new Result_1.Result(false, "Матрица должна быть квадратной.");
