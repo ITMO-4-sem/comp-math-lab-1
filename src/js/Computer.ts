@@ -1,196 +1,214 @@
+/**
+ * Главный класс для решения СЛАУ методом итераций Гаусса-Зейделя.
+ * <br>Осуществляет:
+ * <ul>
+ *     <li>Валидацию матрицы</li>
+ *     <li>Ее преобразование к виду с доминирующей диагональю</li>
+ *     <li>Вычисление значений неизвестных</li>
+ *
+ */
+import {MatrixValidator} from "./MatrixValidator";
+import {Result} from "./Result";
+import {MatrixConverter} from "./MatrixConverter";
 
-class Result {
-    private status: boolean;
-    private message: string;
+export class Computer {
 
-
-    constructor(resultStatus: boolean, resultMessage: string) {
-        this.status = resultStatus;
-        this.message = resultMessage;
-    }
-
-
-    public getStatus(): boolean {
-        return this.status;
-    }
-
-    public getMessage(): string {
-        return this.message;
-    }
-}
-
-
-class Computer {
-
+    public static readonly EPSILON_DEFAULT: number = 0.01;
+    /**
+     * Матрица элементов.
+     */
     private matrix: number[][] = [];
+
+    /**
+     * Размер матрицы (количество неизвестных).
+     */
     private matrixSize: number = 0;
 
-    private rowsMap: number[] = [];
+    /**
+     * Массив векторов приближений 'x'-ов по прошедшим итерациям.
+     */
+    private xValues: number[][] = [];
+
+    /**
+     * Вектор погрешностей.
+     */
+    private accuracyVectors: number[][] = [];
+
+    /**
+     * Счетчик итераций.
+     */
+    private numberOfIterations: number = 0;
 
 
     constructor(matrix: number[][]) {
-        this.setMatrix(matrix); // Возможна неоптимальность, тк значение копируется, походу (передача параметра по значению)
+        this.setMatrix(matrix);
     }
+
 
     /**
-     * wtf
+     * Считает значения 'x'-ов до заданной точности.
+     * @param epsilon - погрешность до достижения которой будут происходить итерации.
+     * @throws Error если матрица невалидна, не может быть преобразована в матрицу с доминирующей диагональю или
+     * происходит другая ошибка, не позволяющая найти значения неизвестных.
      */
-    public compute() {
+    public compute(epsilon: number = Computer.EPSILON_DEFAULT): number[][] {
 
-        const isMatrixConvertibleCheckResult: Result = this.isMatrixConvertibleToDominatingDiagonalView();
+        const isMatrixValidCheckResult: Result = MatrixValidator.isMatrixValid(this.matrix);
 
-        if ( isMatrixConvertibleCheckResult.getStatus() ) {
-            this.convertMatrixToDominatingDiagonalView();
-            return this.matrix;
-        } else {
-            throw new Error(isMatrixConvertibleCheckResult.getMessage());
-        }
-    }
+        if ( ! isMatrixValidCheckResult.getStatus() )
+            throw new Error(isMatrixValidCheckResult.getMessage());
 
+        let matrixConverter: MatrixConverter = new MatrixConverter(this.matrix, false);
 
-    private setMatrix(matrix: number[][]): void {
+        this.matrix = matrixConverter.prepareMatrix();
 
-        this.matrix = matrix;
+        let matrixNorm: number = this.calculateMatrixNorm();
 
-        this.matrixSize = matrix.length;
+        if ( ! (matrixNorm < 1) )
+            throw new Error(`Норма матрицы должна быть меньше единицы. Текущая норма: '${matrixNorm}' ##-Разве это катастрофа?. Итерации не будут сходиться`);
 
-        this.rowsMap = new Array(this.matrixSize).fill(-1); // Указывает, что 'i'-тая строка должна стоять
-        // на 'rowsMap[ i ]' позиции в матрице для получения доминирующей диагонали. Изначально заполнен значениями по дефолту.
-
-
-        if ( this.isMatrixEmpty()) {
-            throw new Error("Матрица не может быть пустой.")
-        }
-
-        if ( ! this.isMatrixSquire() )
-                throw new Error("Матрица должна быть квадратной.")
+        return this.calculateXValues(epsilon);
 
     }
 
 
     /**
-     * Проверяет, является ли матрица пустой.
-     * @returns true, если матрица пустая, иначе - false
+     * Считает значения 'x'-ов до заданной точности.
+     * @param epsilon - погрешность до достижения которой будут происходить итерации.
      */
-    public isMatrixEmpty(): boolean {
-        return (
-            this.matrix.length < 2
-        )
-    }
+    private calculateXValues(epsilon: number): number[][] {
 
-    /**
-     * Проверяет, является ли матрица квадратной.
-     * @returns true, если матрица квадратная, иначе - false.
-     */
-    public isMatrixSquire(): boolean {
+        this.xValues = [this.getInitialApproximation()];
 
-        return (
-            this.matrix.filter((row) => {
+        let x: number;
+        let counter: number;
+        let shift: number;
+        let rateIndex: number;
 
-                return row.length != this.matrixSize; // Оставляет элементы, для которых это условие 'true',
-                                                      // то есть 'плохие', не соответствующие размеру матрицы, ряды.
+        let iterationNumber: number = 0;
 
-            }).length == 0 // Если 'плохие' ряды есть, то - ошибка в матрице. Если их нет, то матрица - норм.
-        )
-    }
+        do {
+            iterationNumber++;
+            this.xValues.push([]); // Значения иксов текущей итерации
 
+            for (let i = 0; i < this.matrixSize; i++) {
+                rateIndex = 0; // Индекс коэффициента в данной строке.
+                counter = i; // Нужен для слежения за количеством иксов, которые берутся из текущей итерации, а не предыдущей.
+                shift = 1; // Сдвиг по номеру итерации. Равен либо 0, либо 1.
+                x = 0;
+                for (let j = 1; j < this.matrixSize; j++) {
+                    if (j - 1 == i) {
+                        rateIndex++; // Если коэффициент соответствует текущему, i-тому иксу, то его пропускаем и берем следующий.
+                    }
 
-    public convertMatrixToDominatingDiagonalView(): void {
-        let index: number = 0;
-        while ( index < this.rowsMap.length ) {
-            if ( index != this.rowsMap[index] ) { // Находим первую попавшуюся строку, которую нужно переставить,
-                // и переставляем ее на соответствующее место. Не заботимся о правильности нового положения той,
-                // с которой данная строка поменяется местами.
-                this.switchMatrixRows(index, this.rowsMap[index]);
-                this.switchArrayElements(index, this.rowsMap[index], this.rowsMap)
-                index = 0; // Начинаем проверку с самого начала. Так как другая строка могла попасть на неправильную позицию.
-            } else {
-                index++;
+                    if (counter == 0)
+                        shift = 0;
+
+                    x += this.matrix[i][j] * this.xValues[iterationNumber - 1 + shift][rateIndex]; //
+                    // 'iterationNumber - 1 + shift' указывает на номер итерации, из которой будет браться коэффициент.
+
+                    rateIndex++;
+                    counter--;
+                }
+
+                x += this.matrix[i][this.matrixSize]; // добавляем 'd', свободный член
+
+                this.xValues[iterationNumber].push(x);
             }
-        }
+        } while ( ! this.isAccuracySufficient( epsilon ) );
+
+        this.numberOfIterations = iterationNumber;
+
+        console.log("values =", this.xValues)
+
+        return this.xValues;
     }
 
 
     /**
-     * Метод проверят, возможно ли преобразовать матрицу к диагональному виду.
-     * Заодно он подготавливает карту рядов 'rowsMap' для перемещения строк матрицы (это выполняется в этом же методе для оптимизации).
+     * Возвращает максимальную погрешность после последней итерации.
+     * @return максимальная погрешность.
      */
-    /**
-     * Проверяет, можно ли преобразовать матрицу к матрице с доминирующей диагональю.
-     * @returns объект класса Result, который содержит информацию о результате.
-     */
-    public isMatrixConvertibleToDominatingDiagonalView(): Result {
+    private getAccuracy(): number {
+        if ( this.xValues.length < 2)
+            throw new Error("Массив приближенных значений иксов содержит только один вектор. Их должно быть минимум два.");
 
-        let dominatingElementIndex;
+        let lastIterationXValues: number[] = this.xValues[this.xValues.length - 1];
+        let penultimateIterationXValues: number[] = this.xValues[this.xValues.length - 2];
 
-        for ( let rowIndex = 0; rowIndex < this.matrixSize; rowIndex++ ) {
-            dominatingElementIndex = this.findDominatingElementIndex(this.matrix[rowIndex]);
-
-            if ( dominatingElementIndex == null )
-                return new Result(false, `Нет доминирующего элемента в строке номер '${rowIndex + 1}' (нумерация с 1).`);
-
-            if ( this.rowsMap.indexOf(dominatingElementIndex) >= 0) // Уже есть элемент, претендующий на это место. // this.rowsMap[rowIndex] != -1
-                return new Result(false,
-                    `В столбце номер '${dominatingElementIndex + 1}' (нумерация с 1) находится больше одного доминирующего элемента. Невозможно построить матрицу с доминирующей диагональю.`)
-
-            this.rowsMap[rowIndex] = dominatingElementIndex;
+        if ( lastIterationXValues.length != penultimateIterationXValues.length ) {
+            throw new Error("Векторы иксов на предпоследней и последней итерациях должны быть равны.");
         }
 
-        return new Result(true, "Матрица правильная.");
+        let accuracy: number[] = [];
+
+        for ( let i = 0; i < lastIterationXValues.length; i++ ) {
+            accuracy.push( Math.abs( lastIterationXValues[i] - penultimateIterationXValues[i] ) );
+        }
+
+        this.accuracyVectors.push(accuracy);
+
+        return Math.max( ...accuracy );
     }
 
 
-
     /**
-     * Возвращает ИНДЕКС доминирующего элемент в массиве или null, если такого элемента нет.
-     * Доминирующий элемент - элемент, модуль которого больше или равен сумме модулей ОСТАЛЬНЫХ элементов.
-     * @param row строка матрицы, в которой будет искаться доминирующий элемент.
-     * @returns индекс доминирующего элемента или null, если его нет.
+     * Определяет, была ли достигнута требуемая точность.
+     *
+     * @param epsilon - допустимая погрешность.
+     * @return true, если требуемая точность была достигнута в последней итерации, иначе - false.
      */
-    public findDominatingElementIndex(row: number[]): number | null {
-
-        row.map( (value, index) => {
-            row[index] = Math.abs(value);
-        })
-        const dominatingElement = Math.max(...row);
-        const dominatingElementIndex = row.indexOf(dominatingElement);
-
-        let sumOfRestElements = 0;
-
-        for (let i = 0; i < row.length; i++) {
-            if ( i == dominatingElementIndex)
-                continue;
-
-            sumOfRestElements += row[i];
-        }
-
-        if ( dominatingElement >= sumOfRestElements ) {
-            return dominatingElementIndex;
-        } else {
-            return null; // No such element
-        }
+    private isAccuracySufficient(epsilon: number): boolean {
+        return this.getAccuracy() <= epsilon;
     }
 
-    /**
-     * Меняет местами 2 ряда матрицы по их индексам.
-     * @param rowIndex1 индекс первого ряда.
-     * @param rowIndex2 индекс второго ряда.
-     */
-    public switchMatrixRows(rowIndex1: number, rowIndex2: number): void {
 
-        const tmpArray = this.matrix[rowIndex1];
-        this.matrix[rowIndex1] = this.matrix[rowIndex2];
-        this.matrix[rowIndex2] = tmpArray;
+    /**
+     * Возвращает начальное приближение. По умолчанию - вектор свободных членов.
+     * @return вектор (массив) - начальное приближение.
+     */
+    private getInitialApproximation(): number[] {
+
+        let initialApproximation: number[] = [];
+
+        for ( let row of this.matrix ) {
+            initialApproximation.push(row[row.length - 1])
+        }
+
+        return initialApproximation;
+    }
+
+
+    /**
+     * Считает норму матрицы.
+     * @return норму матрицы.
+     */
+    private calculateMatrixNorm(): number {
+
+        let rowElementsModulesSums: number[] = [];
+        let rowElementsSum: number = 0;
+
+        for ( let i = 0; i < this.matrixSize; i++ ) {
+            rowElementsSum = 0;
+            for ( let j = 1; j < this.matrixSize; j ++ ) {
+                rowElementsSum += Math.abs(this.matrix[i][j]);
+            }
+            rowElementsModulesSums.push(rowElementsSum);
+            // console.log(`current NORM (i = ${i}) =`, rowElementsSum);
+        }
+
+        return Math.max(...rowElementsModulesSums);
+
     }
 
 
     /**
      * Меняет местами 2 элемента внутри массива по их индексам.
-     * @param elemIndex1 индекс первого элемента.
-     * @param elemIndex2 индекс второго элемента.
-     * @param array массив элементов.
+     * @param elemIndex1 - индекс первого элемента.
+     * @param elemIndex2 - индекс второго элемента.
+     * @param array - массив элементов.
      */
-    public switchArrayElements(elemIndex1: number, elemIndex2: number, array: any[]): void {
+    private swapArrayElements(elemIndex1: number, elemIndex2: number, array: any[]): void {
 
         const tmpElem = array[elemIndex1]
 
@@ -200,10 +218,48 @@ class Computer {
 
 
     /**
-     * Возвращает матрицу элементов.
-     * @returns матрицу элементов.
+     * Getter для количества итераций.
+     * @return количество итераций.
+     */
+    public getNumberOfIterations(): number {
+        return this.numberOfIterations;
+    }
+
+
+    /**
+     * Getter для вектора погрешностей.
+     * @return вектор погрешностей.
+     */
+    public getAccuracyVectors(): number[][] {
+        return this.accuracyVectors;
+    }
+
+
+    /**
+     * Setter для матрицы. Осуществляет проверку ее валидности.
+     * @param matrix - матрица элементов.
+     * @throws Error если матрица невалидна.
+     */
+    public setMatrix(matrix: number[][]) {
+
+        const isMatrixValidCheckResult: Result = MatrixValidator.isMatrixValid(matrix);
+
+        if ( ! isMatrixValidCheckResult.getStatus() ) {
+            throw new Error(isMatrixValidCheckResult.getMessage());
+        }
+
+        this.matrix = matrix;
+        this.matrixSize = matrix.length;
+
+    }
+
+
+    /**
+     * Getter для матрицы элементов.
+     * @return матрицу элементов.
      */
     public getMatrix(): number[][] {
         return this.matrix;
     }
+
 }
