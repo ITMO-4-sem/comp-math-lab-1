@@ -28,6 +28,16 @@ form.addEventListener('input', event => {
   hideMessage();
 });
 
+filePicker.onchange = function (e) {
+    let reader = new FileReader();
+    if (filePicker.files.length != 0) {
+        reader.readAsText(filePicker.files[0]);
+        reader.onload = () => {
+            textArea.value = reader.result;
+        }
+    }
+}
+
 
 function compute() {
     // computer.compute(epsilon);
