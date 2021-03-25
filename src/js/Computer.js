@@ -34,6 +34,7 @@ class Computer {
          * Счетчик итераций.
          */
         this.numberOfIterations = 0;
+        console.log("comp MATRIX\n", matrix);
         this.setMatrix(matrix);
     }
     /**
@@ -47,10 +48,12 @@ class Computer {
         if (!isMatrixValidCheckResult.getStatus())
             throw new Error(isMatrixValidCheckResult.getMessage());
         let matrixConverter = new MatrixConverter_1.MatrixConverter(this.matrix, false);
+        // console.log("blablabla matrix\n", this.matrix);
         this.matrix = matrixConverter.prepareMatrix();
+        // console.log("2222blablabla\n", this.matrix);
         let matrixNorm = this.calculateMatrixNorm();
-        if (!(matrixNorm < 1))
-            throw new Error(`Норма матрицы должна быть меньше единицы. Текущая норма: '${matrixNorm}' ##-Разве это катастрофа?. Итерации не будут сходиться`);
+        // if ( ! (matrixNorm < 1) ) // todo Edited here
+        //     throw new Error(`Норма матрицы должна быть меньше единицы. Текущая норма: '${matrixNorm}' ##-Разве это катастрофа?. Итерации не будут сходиться`);
         return this.calculateXValues(epsilon);
     }
     /**
@@ -88,7 +91,6 @@ class Computer {
             }
         } while (!this.isAccuracySufficient(epsilon));
         this.numberOfIterations = iterationNumber;
-        console.log("values =", this.xValues);
         return this.xValues;
     }
     /**
@@ -143,7 +145,6 @@ class Computer {
                 rowElementsSum += Math.abs(this.matrix[i][j]);
             }
             rowElementsModulesSums.push(rowElementsSum);
-            // console.log(`current NORM (i = ${i}) =`, rowElementsSum);
         }
         return Math.max(...rowElementsModulesSums);
     }
@@ -186,7 +187,6 @@ class Computer {
         this.matrixSize = matrix.length;
     }
     getXVectors() {
-        console.log("xVectors =", this.xValues);
         return this.xValues;
     }
     /**

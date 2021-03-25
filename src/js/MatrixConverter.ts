@@ -33,8 +33,15 @@ export class MatrixConverter {
      * @see transform
      */
     public prepareMatrix(): number[][] {
+        console.log("kek\n", this.matrix)
         this.convert();
+        console.log("---- Матрица с доминирующей диагональю: ----\n", this.matrix);
+
+
+        console.log("aftertimeout")
         this.transform();
+        console.log("---- Трансформированная матрица: ----\n", this.matrix);
+
 
         return this.matrix;
 
@@ -65,6 +72,8 @@ export class MatrixConverter {
                 index++;
             }
         }
+
+        console.log("RRRRRRRRRR\n", this.matrix);
 
         return this.matrix;
     }
@@ -217,5 +226,6 @@ export class MatrixConverter {
     public getMatrix(): number[][] {
         return this.matrix;
     }
+
 
 }

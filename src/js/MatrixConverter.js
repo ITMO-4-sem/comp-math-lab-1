@@ -22,8 +22,12 @@ class MatrixConverter {
      * @see transform
      */
     prepareMatrix() {
+        console.log("kek\n", this.matrix);
         this.convert();
+        console.log("---- Матрица с доминирующей диагональю: ----\n", this.matrix);
+        console.log("aftertimeout");
         this.transform();
+        console.log("---- Трансформированная матрица: ----\n", this.matrix);
         return this.matrix;
     }
     /**
@@ -48,6 +52,7 @@ class MatrixConverter {
                 index++;
             }
         }
+        console.log("RRRRRRRRRR\n", this.matrix);
         return this.matrix;
     }
     /**

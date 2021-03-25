@@ -1,14 +1,14 @@
 import {Computer} from "./Computer";
 
 let matrix: number[][] = [
-    [2, 2, 10, 14],
-    [10, 1, 1, 12],
-    [2, 10, 1, 13],
+    // [2, 2, 10, 14],
+    // [10, 1, 1, 12],
+    // [2, 10, 1, 13],
     // [0, 1, 0, 0], // Даже так работает ОФИГЕТЬ!
 ];
 let epsilon: number;
 
-let computer: Computer = new Computer(matrix);
+// let computer: Computer = new Computer(matrix);
 
 const form = document.getElementById("form");
 const textArea = document.getElementById("textarea");
@@ -41,17 +41,25 @@ filePicker.onchange = function (e) {
 
 function compute() {
     // computer.compute(epsilon);
-    console.log(".....computing....");
-    console.log("epsilon: ", epsilon);
-    console.log("Matrix is", matrix);
+    // console.log(".....computing....");
+    // console.log("epsilon: ", epsilon);
+    // console.log("Matrix is", matrix);
 
 
 
     let result = "";
 
     try {
-        computer.setMatrix(matrix);
-        computer.compute(epsilon);
+        // console.log("_____ pppFFF\n", matrix);
+        console.log("--- Исходная матрица ---\n", matrix);
+
+        let prp = JSON.parse(JSON.stringify(matrix));
+        console.log("111", prp);
+        console.log("122", JSON.parse(JSON.stringify(matrix)))
+        let computer: Computer = new Computer(prp);
+        // computer.setMatrix(matrix);
+        // console.log("--- Исходная матрица ---\n", computer.getMatrix());
+        computer.compute(epsilon); // Если закомментировать этот метод, то вывод работает номрально
 
         result += `Искомые значения неизвестных: ${computer.getXVectors()[computer.getXVectors().length - 1].map((elem) => {return "\n" + elem})}`
 
@@ -99,9 +107,13 @@ submitButton.addEventListener('click', () => {
             return;
         }
 
+        // console.log("Going to check validity");
         if ( isInputValid(textAreaInput) ) {
+            // matrix = textAreaInput
+            // console.log("after Valid matrix\n", matrix);
             compute();
         } else {
+            return;
             // message is already shown in 'isInputValid' method
         }
     } else {
@@ -119,11 +131,12 @@ submitButton.addEventListener('click', () => {
 
                 } else {
                     // message is already shown in 'isInputValid' method
+                    return;
                 }
 
             }
         } else {
-            showMessage("Выберете файл, пожалуйста");
+            showMessage("Выберете файл, пожалуйста!");
         }
     }
 });
@@ -135,12 +148,16 @@ function isFileSelected() {
 function isInputValid(input: string): boolean {
     let rows = input.trim().split("\n");
 
+    // console.log("rows = \n", rows);
+
     let tmpMatrix: number[][] = [];
 
     for (let row of rows) {
+        // console.log("tmpTTT\n", tmpMatrix);
         tmpMatrix.push([]);
         for (let element of row.trim().replace(/\s\s+/g, " ").split(" ")) {
             element.trim();
+            // console.log("element = \n", element)
 
             element = element.replace(",", ".");
 
@@ -148,11 +165,15 @@ function isInputValid(input: string): boolean {
                 showMessage(`Элемент матрицы не является числом: ${element}`);
                 return false;
             }
+            // console.log("1tmpMatrix", tmpMatrix);
             tmpMatrix[tmpMatrix.length - 1].push(Number(element));
+            // console.log("2tmpMatrix", tmpMatrix);
+
         }
     }
 
-    matrix = tmpMatrix; // беее
+    console.log("tmptmptmp\n", tmpMatrix);
+    matrix = JSON.parse(JSON.stringify(tmpMatrix)); // беее
 
     return true;
 

@@ -2,12 +2,13 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const Computer_1 = require("./Computer");
 let matrix = [
-    [2, 2, 10, 14],
-    [10, 1, 1, 12],
-    [2, 10, 1, 13],
+// [2, 2, 10, 14],
+// [10, 1, 1, 12],
+// [2, 10, 1, 13],
+// [0, 1, 0, 0], // Даже так работает ОФИГЕТЬ!
 ];
 let epsilon;
-let computer = new Computer_1.Computer(matrix);
+// let computer: Computer = new Computer(matrix);
 const form = document.getElementById("form");
 const textArea = document.getElementById("textarea");
 const filePicker = document.getElementById("filePicker");
@@ -32,13 +33,20 @@ filePicker.onchange = function (e) {
 };
 function compute() {
     // computer.compute(epsilon);
-    console.log(".....computing....");
-    console.log("epsilon: ", epsilon);
-    console.log("Matrix is", matrix);
+    // console.log(".....computing....");
+    // console.log("epsilon: ", epsilon);
+    // console.log("Matrix is", matrix);
     let result = "";
     try {
-        computer.setMatrix(matrix);
-        computer.compute(epsilon);
+        // console.log("_____ pppFFF\n", matrix);
+        console.log("--- Исходная матрица ---\n", matrix);
+        let prp = JSON.parse(JSON.stringify(matrix));
+        console.log("111", prp);
+        console.log("122", JSON.parse(JSON.stringify(matrix)));
+        let computer = new Computer_1.Computer(prp);
+        // computer.setMatrix(matrix);
+        // console.log("--- Исходная матрица ---\n", computer.getMatrix());
+        computer.compute(epsilon); // Если закомментировать этот метод, то вывод работает номрально
         result += `Искомые значения неизвестных: ${computer.getXVectors()[computer.getXVectors().length - 1].map((elem) => { return "\n" + elem; })}`;
         result += `\n\nКоличество итераций: ${computer.getNumberOfIterations()}`;
         result += `\n\nВектор погрешностей: ${computer.getAccuracyVectors()[computer.getAccuracyVectors().length - 1].map((elem) => { return "\n" + elem; })}`;
@@ -73,10 +81,14 @@ submitButton.addEventListener('click', () => {
             showMessage("Введите чиселки в поле ввода");
             return;
         }
+        // console.log("Going to check validity");
         if (isInputValid(textAreaInput)) {
+            // matrix = textAreaInput
+            // console.log("after Valid matrix\n", matrix);
             compute();
         }
         else {
+            return;
             // message is already shown in 'isInputValid' method
         }
     }
@@ -93,11 +105,12 @@ submitButton.addEventListener('click', () => {
                 }
                 else {
                     // message is already shown in 'isInputValid' method
+                    return;
                 }
             };
         }
         else {
-            showMessage("Выберете файл, пожалуйста");
+            showMessage("Выберете файл, пожалуйста!");
         }
     }
 });
@@ -106,20 +119,26 @@ function isFileSelected() {
 }
 function isInputValid(input) {
     let rows = input.trim().split("\n");
+    // console.log("rows = \n", rows);
     let tmpMatrix = [];
     for (let row of rows) {
+        // console.log("tmpTTT\n", tmpMatrix);
         tmpMatrix.push([]);
         for (let element of row.trim().replace(/\s\s+/g, " ").split(" ")) {
             element.trim();
+            // console.log("element = \n", element)
             element = element.replace(",", ".");
             if (!isNumber(element)) {
                 showMessage(`Элемент матрицы не является числом: ${element}`);
                 return false;
             }
+            // console.log("1tmpMatrix", tmpMatrix);
             tmpMatrix[tmpMatrix.length - 1].push(Number(element));
+            // console.log("2tmpMatrix", tmpMatrix);
         }
     }
-    matrix = tmpMatrix; // беее
+    console.log("tmptmptmp\n", tmpMatrix);
+    matrix = JSON.parse(JSON.stringify(tmpMatrix)); // беее
     return true;
 }
 function isNumber(value) {

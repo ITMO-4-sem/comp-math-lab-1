@@ -41,6 +41,7 @@ export class Computer {
 
 
     constructor(matrix: number[][]) {
+        console.log("comp MATRIX\n", matrix);
         this.setMatrix(matrix);
     }
 
@@ -60,12 +61,13 @@ export class Computer {
 
         let matrixConverter: MatrixConverter = new MatrixConverter(this.matrix, false);
 
+        // console.log("blablabla matrix\n", this.matrix);
         this.matrix = matrixConverter.prepareMatrix();
-
+        // console.log("2222blablabla\n", this.matrix);
         let matrixNorm: number = this.calculateMatrixNorm();
 
-        if ( ! (matrixNorm < 1) )
-            throw new Error(`Норма матрицы должна быть меньше единицы. Текущая норма: '${matrixNorm}' ##-Разве это катастрофа?. Итерации не будут сходиться`);
+        // if ( ! (matrixNorm < 1) ) // todo Edited here
+        //     throw new Error(`Норма матрицы должна быть меньше единицы. Текущая норма: '${matrixNorm}' ##-Разве это катастрофа?. Итерации не будут сходиться`);
 
         return this.calculateXValues(epsilon);
 
@@ -118,8 +120,6 @@ export class Computer {
         } while ( ! this.isAccuracySufficient( epsilon ) );
 
         this.numberOfIterations = iterationNumber;
-
-        console.log("values =", this.xValues)
 
         return this.xValues;
     }
@@ -194,7 +194,6 @@ export class Computer {
                 rowElementsSum += Math.abs(this.matrix[i][j]);
             }
             rowElementsModulesSums.push(rowElementsSum);
-            // console.log(`current NORM (i = ${i}) =`, rowElementsSum);
         }
 
         return Math.max(...rowElementsModulesSums);
@@ -251,11 +250,11 @@ export class Computer {
         this.matrix = matrix;
         this.matrixSize = matrix.length;
 
+
     }
 
 
     public getXVectors(): number[][] {
-        console.log("xVectors =", this.xValues);
         return this.xValues;
     }
 
